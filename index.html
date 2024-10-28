@@ -58,24 +58,71 @@
             background-color: #0056b3;
         }
         img {
-            width: 150px; /* Ajuste o tamanho conforme necessário */
+            width: 150px;
             margin-bottom: 20px;
+        }
+        .page {
+            display: none;
+        }
+        .active {
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <img src="https://raw.githubusercontent.com/fabiogrisard/addcasa/refs/heads/main/logoexatanovo.JPG" alt="Logotipo">
-        <h1>Formulário de Casas, Sobrados e Apartamentos</h1>
-        <form id="configForm">
-            <label for="folderId">ID da Pasta no Google Drive:</label>
-            <input type="text" id="folderId" name="folderId" required>
+        <div id="page1" class="page active">
+            <h1>Formulário de Casas, Sobrados e Apartamentos</h1>
+            <form id="configForm">
+                <label for="folderId">ID da Pasta no Google Drive:</label>
+                <input type="text" id="folderId" name="folderId" required>
 
-            <label for="spreadsheetId">ID da Planilha no Google Sheets:</label>
-            <input type="text" id="spreadsheetId" name="spreadsheetId" required>
+                <label for="spreadsheetId">ID da Planilha no Google Sheets:</label>
+                <input type="text" id="spreadsheetId" name="spreadsheetId" required>
 
-            <button type="button" onclick="goToPage2()">Próxima Página</button>
-        </form>
+                <button type="button" onclick="goToPage2()">Próxima Página</button>
+            </form>
+        </div>
+
+        <div id="page2" class="page">
+            <h1>Inserção de Dados Adicionais</h1>
+            <form id="dataForm">
+                <label for="numeroDado">Número do Dado:</label>
+                <input type="text" id="numeroDado" name="numeroDado" required><br><br>
+
+                <label for="link">Link:</label>
+                <input type="url" id="link" name="link" required><br><br>
+
+                <label for="coordenadas">Coordenadas:</label>
+                <input type="text" id="coordenadas" name="coordenadas" required><br><br>
+
+                <label for="padrao">Padrão:</label>
+                <select id="padrao" name="padrao" required>
+                    <option value="alto">Alto</option>
+                    <option value="medio">Médio</option>
+                    <option value="baixo">Baixo</option>
+                </select><br><br>
+
+                <label for="conservacao">Conservação:</label>
+                <select id="conservacao" name="conservacao" required>
+                    <option value="otimo">Ótimo</option>
+                    <option value="muitoBom">Muito Bom</option>
+                    <option value="bom">Bom</option>
+                    <option value="intermediario">Intermediário</option>
+                    <option value="regular">Regular</option>
+                    <option value="deficiente">Deficiente</option>
+                    <option value="mau">Mau</option>
+                    <option value="muitoMau">Muito Mau</option>
+                    <option value="demolicao">Demolição</option>
+                </select><br><br>
+
+                <label for="idadeAparente">Idade Aparente:</label>
+                <input type="number" id="idadeAparente" name="idadeAparente" required><br><br>
+
+                <button type="submit">Enviar Dados</button>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -84,12 +131,35 @@
             const spreadsheetId = document.getElementById('spreadsheetId').value;
 
             if (folderId && spreadsheetId) {
-                alert(`ID da Pasta: ${folderId}\nID da Planilha: ${spreadsheetId}`);
-                // Aqui você pode adicionar a lógica para armazenar os dados e passar para a próxima página
+                // Armazenar os IDs no armazenamento local
+                localStorage.setItem('folderId', folderId);
+                localStorage.setItem('spreadsheetId', spreadsheetId);
+
+                // Navegar para a próxima "página"
+                document.getElementById('page1').classList.remove('active');
+                document.getElementById('page2').classList.add('active');
             } else {
                 alert('Por favor, preencha todos os campos.');
             }
         }
+
+        document.getElementById('dataForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const numeroDado = document.getElementById('numeroDado').value;
+            const link = document.getElementById('link').value;
+            const coordenadas = document.getElementById('coordenadas').value;
+            const padrao = document.getElementById('padrao').value;
+            const conservacao = document.getElementById('conservacao').value;
+            const idadeAparente = document.getElementById('idadeAparente').value;
+
+            // Recuperar os IDs armazenados
+            const folderId = localStorage.getItem('folderId');
+            const spreadsheetId = localStorage.getItem('spreadsheetId');
+
+            alert(`Dados enviados:\nID da Pasta: ${folderId}\nID da Planilha: ${spreadsheetId}\nNúmero do Dado: ${numeroDado}\nLink: ${link}\nCoordenadas: ${coordenadas}\nPadrão: ${padrao}\nConservação: ${conservacao}\nIdade Aparente: ${idadeAparente}`);
+
+            // Aqui você pode adicionar a lógica para enviar os dados via webhook ou outro método
+        });
     </script>
 </body>
 </html>
