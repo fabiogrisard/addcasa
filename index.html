@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envio de Dados para Google Drive</title>
+</head>
+<body>
+    <h1>Configuração de IDs do Google Drive</h1>
+    <form id="configForm">
+        <label for="folderId">ID da Pasta no Google Drive:</label><br>
+        <input type="text" id="folderId" name="folderId" required><br><br>
+
+        <label for="spreadsheetId">ID da Planilha no Google Sheets:</label><br>
+        <input type="text" id="spreadsheetId" name="spreadsheetId" required><br><br>
+
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script>
+        document.getElementById('configForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const folderId = document.getElementById('folderId').value;
+            const spreadsheetId = document.getElementById('spreadsheetId').value;
+            alert(`ID da Pasta: ${folderId}\nID da Planilha: ${spreadsheetId}`);
+            // Aqui você pode adicionar a lógica para enviar esses dados para um servidor ou processá-los de alguma forma.
+        });
+    </script>
+</body>
+</html>
