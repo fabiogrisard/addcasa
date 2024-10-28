@@ -3,27 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Envio de Dados para Google Drive</title>
+    <title>Configuração e Inserção de Dados</title>
+    <style>
+        .page {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <h1>Configuração de IDs do Google Drive</h1>
-    <form id="configForm">
-        <label for="folderId">ID da Pasta no Google Drive:</label><br>
-        <input type="text" id="folderId" name="folderId" required><br><br>
+    <!-- Página 1: Coleta de IDs -->
+    <div id="page1" class="page active">
+        <h1>Configuração de IDs do Google Drive</h1>
+        <form id="configForm">
+            <label for="folderId">ID da Pasta no Google Drive:</label><br>
+            <input type="text" id="folderId" name="folderId" required><br><br>
 
-        <label for="spreadsheetId">ID da Planilha no Google Sheets:</label><br>
-        <input type="text" id="spreadsheetId" name="spreadsheetId" required><br><br>
+            <label for="spreadsheetId">ID da Planilha no Google Sheets:</label><br>
+            <input type="text" id="spreadsheetId" name="spreadsheetId" required><br><br>
 
-        <button type="submit">Enviar</button>
-    </form>
+            <button type="button" onclick="goToPage2()">Próxima Página</button>
+        </form>
+    </div>
+
+    <!-- Página 2: Inserção de Dados Adicionais -->
+    <div id="page2" class="page">
+        <h1>Inserção de Dados Adicionais</h1>
+        <form id="dataForm">
+            <label for="numeroDado">Número do Dado:</label><br>
+            <input type="text" id="numeroDado" name="numeroDado" required><br><br>
+
+            <label for="link">Link:</label><br>
+            <input type="url" id="link" name="link" required><br><br>
+
+            <label for="coordenadas">Coordenadas:</label><br>
+            <input type="text" id="coordenadas" name="coordenadas" required><br><br>
+
+            <label for="padrao">Padrão:</label><br>
+            <select id="padrao" name="padrao" required>
+                <option value="alto">Alto</option>
+                <option value="medio">Médio</option>
+                <option value="baixo">Baixo</option>
+            </select><br><br>
+
+            <label for="conservacao">Conservação:</label><br>
+            <select id="conservacao" name="conservacao" required>
+                <option value="otimo">Ótimo</option>
+                <option value="muitoBom">Muito Bom</option>
+                <option value="bom">Bom</option>
+                <option value="intermediario">Intermediário</option>
+                <option value="regular">Regular</option>
+                <option value="deficiente">Deficiente</option>
+                <option value="mau">Mau</option>
+                <option value="muitoMau">Muito Mau</option>
+                <option value="demolicao">Demolição</option>
+            </select><br><br>
+
+            <label for="idadeAparente">Idade Aparente:</label><br>
+            <input type="number" id="idadeAparente" name="idadeAparente" required><br><br>
+
+            <button type="submit">Enviar Dados</button>
+        </form>
+    </div>
 
     <script>
-        document.getElementById('configForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+        function goToPage2() {
             const folderId = document.getElementById('folderId').value;
             const spreadsheetId = document.getElementById('spreadsheetId').value;
-            alert(`ID da Pasta: ${folderId}\nID da Planilha: ${spreadsheetId}`);
-            // Aqui você pode adicionar a lógica para enviar esses dados para um servidor ou processá-los de alguma forma.
+
+            if (folderId && spreadsheetId) {
+                document.getElementById('page1').classList.remove('active');
+                document.getElementById('page2').classList.add('active');
+            } else {
+                alert('Por favor, preencha todos os campos.');
+            }
+        }
+
+        document.getElementById('dataForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const numeroDado = document.getElementById('numeroDado').value;
+            const link = document.getElementById('link').value;
+            const coordenadas = document.getElementById('coordenadas').value;
+            const padrao = document.getElementById('padrao').value;
+            const conservacao = document.getElementById('conservacao').value;
+            const idadeAparente = document.getElementById('idadeAparente').value;
+
+            alert(`Dados enviados:\nNúmero do Dado: ${numeroDado}\nLink: ${link}\nCoordenadas: ${coordenadas}\nPadrão: ${padrao}\nConservação: ${conservacao}\nIdade Aparente: ${idadeAparente}`);
         });
     </script>
 </body>
