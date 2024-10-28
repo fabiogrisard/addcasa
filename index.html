@@ -22,7 +22,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
             width: 90%;
-            max-width: 600px;
+            max-width: 800px;
             text-align: center;
         }
         h1 {
@@ -32,6 +32,7 @@
         form {
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
         }
         label {
             margin-top: 10px;
@@ -43,6 +44,7 @@
             margin-top: 5px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            width: 100%;
         }
         button {
             margin-top: 20px;
@@ -67,6 +69,23 @@
         .active {
             display: block;
         }
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-map-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .form-container {
+            flex: 1;
+            min-width: 300px;
+            margin-right: 20px;
+        }
     </style>
 </head>
 <body>
@@ -87,41 +106,46 @@
 
         <div id="page2" class="page">
             <h1>Inserção de Dados Adicionais</h1>
-            <form id="dataForm">
-                <label for="numeroDado">Número do Dado:</label>
-                <input type="text" id="numeroDado" name="numeroDado" required><br><br>
+            <div class="form-map-container">
+                <div class="form-container">
+                    <form id="dataForm">
+                        <label for="numeroDado">Número do Dado:</label>
+                        <input type="text" id="numeroDado" name="numeroDado" required>
 
-                <label for="link">Link:</label>
-                <input type="url" id="link" name="link" required><br><br>
+                        <label for="link">Link:</label>
+                        <input type="url" id="link" name="link" required>
 
-                <label for="coordenadas">Coordenadas:</label>
-                <input type="text" id="coordenadas" name="coordenadas" required><br><br>
+                        <label for="coordenadas">Coordenadas:</label>
+                        <input type="text" id="coordenadas" name="coordenadas" required>
 
-                <label for="padrao">Padrão:</label>
-                <select id="padrao" name="padrao" required>
-                    <option value="alto">Alto</option>
-                    <option value="medio">Médio</option>
-                    <option value="baixo">Baixo</option>
-                </select><br><br>
+                        <label for="padrao">Padrão:</label>
+                        <select id="padrao" name="padrao" required>
+                            <option value="alto">Alto</option>
+                            <option value="medio">Médio</option>
+                            <option value="baixo">Baixo</option>
+                        </select>
 
-                <label for="conservacao">Conservação:</label>
-                <select id="conservacao" name="conservacao" required>
-                    <option value="otimo">Ótimo</option>
-                    <option value="muitoBom">Muito Bom</option>
-                    <option value="bom">Bom</option>
-                    <option value="intermediario">Intermediário</option>
-                    <option value="regular">Regular</option>
-                    <option value="deficiente">Deficiente</option>
-                    <option value="mau">Mau</option>
-                    <option value="muitoMau">Muito Mau</option>
-                    <option value="demolicao">Demolição</option>
-                </select><br><br>
+                        <label for="conservacao">Conservação:</label>
+                        <select id="conservacao" name="conservacao" required>
+                            <option value="otimo">Ótimo</option>
+                            <option value="muitoBom">Muito Bom</option>
+                            <option value="bom">Bom</option>
+                            <option value="intermediario">Intermediário</option>
+                            <option value="regular">Regular</option>
+                            <option value="deficiente">Deficiente</option>
+                            <option value="mau">Mau</option>
+                            <option value="muitoMau">Muito Mau</option>
+                            <option value="demolicao">Demolição</option>
+                        </select>
 
-                <label for="idadeAparente">Idade Aparente:</label>
-                <input type="number" id="idadeAparente" name="idadeAparente" required><br><br>
+                        <label for="idadeAparente">Idade Aparente:</label>
+                        <input type="number" id="idadeAparente" name="idadeAparente" required>
 
-                <button type="submit">Enviar Dados</button>
-            </form>
+                        <button type="submit">Enviar Dados</button>
+                    </form>
+                </div>
+                <div id="map"></div>
+            </div>
         </div>
     </div>
 
@@ -131,11 +155,9 @@
             const spreadsheetId = document.getElementById('spreadsheetId').value;
 
             if (folderId && spreadsheetId) {
-                // Armazenar os IDs no armazenamento local
                 localStorage.setItem('folderId', folderId);
                 localStorage.setItem('spreadsheetId', spreadsheetId);
 
-                // Navegar para a próxima "página"
                 document.getElementById('page1').classList.remove('active');
                 document.getElementById('page2').classList.add('active');
             } else {
@@ -152,14 +174,78 @@
             const conservacao = document.getElementById('conservacao').value;
             const idadeAparente = document.getElementById('idadeAparente').value;
 
-            // Recuperar os IDs armazenados
             const folderId = localStorage.getItem('folderId');
             const spreadsheetId = localStorage.getItem('spreadsheetId');
 
             alert(`Dados enviados:\nID da Pasta: ${folderId}\nID da Planilha: ${spreadsheetId}\nNúmero do Dado: ${numeroDado}\nLink: ${link}\nCoordenadas: ${coordenadas}\nPadrão: ${padrao}\nConservação: ${conservacao}\nIdade Aparente: ${idadeAparente}`);
 
-            // Aqui você pode adicionar a lógica para enviar os dados via webhook ou outro método
+            // Adicione a lógica para enviar os dados via webhook ou outro método
         });
+
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: -23.55052, lng: -46.633308 }, // Inicializa o mapa em São Paulo
+                zoom: 10,
+            });
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.placeholder = "Pesquisar cidade";
+            input.style.width = "100%";
+            input.style.marginBottom = "10px";
+            document.getElementById("map").appendChild(input);
+
+            const searchBox = new google.maps.places.SearchBox(input);
+            map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+            map.addListener("bounds_changed", () => {
+                searchBox.setBounds(map.getBounds());
+            });
+
+            let markers = [];
+
+            searchBox.addListener("places_changed", () => {
+                const places = searchBox.getPlaces();
+
+                if (places.length == 0) {
+                    return;
+                }
+
+                markers.forEach((marker) => {
+                    marker.setMap(null);
+                });
+                markers = [];
+
+                const bounds = new google.maps.LatLngBounds();
+                places.forEach((place) => {
+                    if (!place.geometry || !place.geometry.location) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+
+                    const marker = new google.maps.Marker({
+                        map,
+                        title: place.name,
+                        position: place.geometry.location,
+                    });
+
+                    markers.push(marker);
+
+                    if (place.geometry.viewport) {
+                        bounds.union(place.geometry.viewport);
+                    } else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                map.fitBounds(bounds);
+            });
+
+            map.addListener("click", (mapsMouseEvent) => {
+                const coords = mapsMouseEvent.latLng.toString().replace(/[()]/g, '');
+                document.getElementById('coordenadas').value = coords;
+            });
+        }
     </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAryf15DN6a0iOH72GMB0IaS3qbL44E8G8&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
