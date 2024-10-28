@@ -69,11 +69,15 @@
     </div>
 
     <script>
+        let formData = {};
+
         function goToPage2() {
             const folderId = document.getElementById('folderId').value;
             const spreadsheetId = document.getElementById('spreadsheetId').value;
 
             if (folderId && spreadsheetId) {
+                formData.folderId = folderId;
+                formData.spreadsheetId = spreadsheetId;
                 document.getElementById('page1').classList.remove('active');
                 document.getElementById('page2').classList.add('active');
             } else {
@@ -90,7 +94,14 @@
             const conservacao = document.getElementById('conservacao').value;
             const idadeAparente = document.getElementById('idadeAparente').value;
 
-            alert(`Dados enviados:\nNúmero do Dado: ${numeroDado}\nLink: ${link}\nCoordenadas: ${coordenadas}\nPadrão: ${padrao}\nConservação: ${conservacao}\nIdade Aparente: ${idadeAparente}`);
+            formData.numeroDado = numeroDado;
+            formData.link = link;
+            formData.coordenadas = coordenadas;
+            formData.padrao = padrao;
+            formData.conservacao = conservacao;
+            formData.idadeAparente = idadeAparente;
+
+            alert(`Dados enviados:\nID da Pasta: ${formData.folderId}\nID da Planilha: ${formData.spreadsheetId}\nNúmero do Dado: ${formData.numeroDado}\nLink: ${formData.link}\nCoordenadas: ${formData.coordenadas}\nPadrão: ${formData.padrao}\nConservação: ${formData.conservacao}\nIdade Aparente: ${formData.idadeAparente}`);
         });
     </script>
 </body>
