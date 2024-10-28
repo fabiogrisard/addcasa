@@ -3,106 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuração e Inserção de Dados</title>
+    <title>Formulário Moderno</title>
     <style>
-        .page {
-            display: none;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        .active {
-            display: block;
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: #007BFF;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="url"], input[type="number"], select {
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        img {
+            width: 150px; /* Ajuste o tamanho conforme necessário */
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <!-- Página 1: Coleta de IDs -->
-    <div id="page1" class="page active">
+    <div class="container">
+        <img src="http://engenhariaexata.com.br/wp-content/uploads/2024/09/cropped-cropped-image.webp" alt="Logotipo">
         <h1>Configuração de IDs do Google Drive</h1>
         <form id="configForm">
-            <label for="folderId">ID da Pasta no Google Drive:</label><br>
-            <input type="text" id="folderId" name="folderId" required><br><br>
+            <label for="folderId">ID da Pasta no Google Drive:</label>
+            <input type="text" id="folderId" name="folderId" required>
 
-            <label for="spreadsheetId">ID da Planilha no Google Sheets:</label><br>
-            <input type="text" id="spreadsheetId" name="spreadsheetId" required><br><br>
+            <label for="spreadsheetId">ID da Planilha no Google Sheets:</label>
+            <input type="text" id="spreadsheetId" name="spreadsheetId" required>
 
             <button type="button" onclick="goToPage2()">Próxima Página</button>
         </form>
     </div>
 
-    <!-- Página 2: Inserção de Dados Adicionais -->
-    <div id="page2" class="page">
-        <h1>Inserção de Dados Adicionais</h1>
-        <form id="dataForm">
-            <label for="numeroDado">Número do Dado:</label><br>
-            <input type="text" id="numeroDado" name="numeroDado" required><br><br>
-
-            <label for="link">Link:</label><br>
-            <input type="url" id="link" name="link" required><br><br>
-
-            <label for="coordenadas">Coordenadas:</label><br>
-            <input type="text" id="coordenadas" name="coordenadas" required><br><br>
-
-            <label for="padrao">Padrão:</label><br>
-            <select id="padrao" name="padrao" required>
-                <option value="alto">Alto</option>
-                <option value="medio">Médio</option>
-                <option value="baixo">Baixo</option>
-            </select><br><br>
-
-            <label for="conservacao">Conservação:</label><br>
-            <select id="conservacao" name="conservacao" required>
-                <option value="otimo">Ótimo</option>
-                <option value="muitoBom">Muito Bom</option>
-                <option value="bom">Bom</option>
-                <option value="intermediario">Intermediário</option>
-                <option value="regular">Regular</option>
-                <option value="deficiente">Deficiente</option>
-                <option value="mau">Mau</option>
-                <option value="muitoMau">Muito Mau</option>
-                <option value="demolicao">Demolição</option>
-            </select><br><br>
-
-            <label for="idadeAparente">Idade Aparente:</label><br>
-            <input type="number" id="idadeAparente" name="idadeAparente" required><br><br>
-
-            <button type="submit">Enviar Dados</button>
-        </form>
-    </div>
-
     <script>
-        let formData = {};
-
         function goToPage2() {
             const folderId = document.getElementById('folderId').value;
             const spreadsheetId = document.getElementById('spreadsheetId').value;
 
             if (folderId && spreadsheetId) {
-                formData.folderId = folderId;
-                formData.spreadsheetId = spreadsheetId;
-                document.getElementById('page1').classList.remove('active');
-                document.getElementById('page2').classList.add('active');
+                alert(`ID da Pasta: ${folderId}\nID da Planilha: ${spreadsheetId}`);
+                // Aqui você pode adicionar a lógica para armazenar os dados e passar para a próxima página
             } else {
                 alert('Por favor, preencha todos os campos.');
             }
         }
-
-        document.getElementById('dataForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const numeroDado = document.getElementById('numeroDado').value;
-            const link = document.getElementById('link').value;
-            const coordenadas = document.getElementById('coordenadas').value;
-            const padrao = document.getElementById('padrao').value;
-            const conservacao = document.getElementById('conservacao').value;
-            const idadeAparente = document.getElementById('idadeAparente').value;
-
-            formData.numeroDado = numeroDado;
-            formData.link = link;
-            formData.coordenadas = coordenadas;
-            formData.padrao = padrao;
-            formData.conservacao = conservacao;
-            formData.idadeAparente = idadeAparente;
-
-            alert(`Dados enviados:\nID da Pasta: ${formData.folderId}\nID da Planilha: ${formData.spreadsheetId}\nNúmero do Dado: ${formData.numeroDado}\nLink: ${formData.link}\nCoordenadas: ${formData.coordenadas}\nPadrão: ${formData.padrao}\nConservação: ${formData.conservacao}\nIdade Aparente: ${formData.idadeAparente}`);
-        });
     </script>
 </body>
 </html>
