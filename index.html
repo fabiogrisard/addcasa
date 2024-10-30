@@ -72,13 +72,18 @@
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        #search-container {
-            margin-top: 20px;
+        #pac-input {
+            background-color: #fff;
+            font-family: Roboto;
+            font-size: 15px;
+            font-weight: 300;
+            margin-left: 12px;
+            padding: 0 11px 0 13px;
+            text-overflow: ellipsis;
+            width: 300px;
         }
-        #search-input {
-            width: calc(100% - 80px);
-            padding: 10px;
-            margin-right: 10px;
+        #pac-input:focus {
+            border-color: #4d90fe;
         }
     </style>
 </head>
@@ -136,10 +141,6 @@
                 <button type="submit">Enviar Dados</button>
             </form>
 
-            <div id="search-container">
-                <input id="search-input" type="text" placeholder="Pesquisar endereço">
-                <button onclick="searchLocation()">Buscar</button>
-            </div>
             <div id="map"></div>
         </div>
     </div>
@@ -178,37 +179,75 @@
             // Adicione a lógica para enviar os dados via webhook ou outro método
         });
 
-        let map;
-        let geocoder;
-
         function initMap() {
-            map = new google.maps.Map(document.getElementById("map"), {
+            const map = new google.maps.Map(document.getElementById("map"), {
                 center: { lat: -25.394552444520578, lng: -51.4582512931166 },
-                zoom: 8,
+                zoom: 13,
             });
 
-            geocoder = new google.maps.Geocoder();
+            // Cria o campo de busca
+            const input = document.createElement("input");
+            input.id = "pac-input";
+            input.className = "controls";
+            input.type = "text";
+            input.placeholder = "Pesquisar endereço";
 
+            map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+            // Configura o SearchBox
+            const searchBox = new google.maps.places.SearchBox(input);
+
+            map.addListener("bounds_changed", () => {
+                searchBox.setBounds(map.getBounds());
+            });
+
+            let markers = [];
+
+            searchBox.addListener("places_changed", () => {
+                const places = searchBox.getPlaces();
+
+                if (places.length == 0) {
+                    return;
+                }
+
+                // Limpa os marcadores antigos
+                markers.forEach((marker) => {
+                    marker.setMap(null);
+                });
+                markers = [];
+
+                // Para cada lugar, adiciona um marcador
+                const bounds = new google.maps.LatLngBounds();
+                places.forEach((place) => {
+                    if (!place.geometry || !place.geometry.location) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+
+                    const marker = new google.maps.Marker({
+                        map,
+                        title: place.name,
+                        position: place.geometry.location,
+                    });
+
+                    markers.push(marker);
+
+                    if (place.geometry.viewport) {
+                        bounds.union(place.geometry.viewport);
+                    } else {
+                        bounds.extend(place.geometry.location);
+                    }
+
+                    // Atualiza o campo de coordenadas
+                    document.getElementById('coordenadas').value = place.geometry.location.toString().replace(/[()]/g, '');
+                });
+                map.fitBounds(bounds);
+            });
+
+            // Adiciona evento de clique no mapa
             map.addListener("click", (mapsMouseEvent) => {
                 const coords = mapsMouseEvent.latLng.toString().replace(/[()]/g, '');
                 document.getElementById('coordenadas').value = coords;
-            });
-        }
-
-        function searchLocation() {
-            const address = document.getElementById('search-input').value;
-            geocoder.geocode({ 'address': address }, function(results, status) {
-                if (status === 'OK') {
-                    map.setCenter(results[0].geometry.location);
-                    new google.maps.Marker({
-                        map: map,
-                        position: results[0].geometry.location
-                    });
-                    document.getElementById('coordenadas').value = results[0].geometry.location.toString().replace(/[()]/g, '');
-                } else {
-                    alert('Geocode não foi bem-sucedido pelo seguinte motivo: ' + status);
-                    console.error('Erro de geocodificação:', status);
-                }
             });
         }
     </script>
