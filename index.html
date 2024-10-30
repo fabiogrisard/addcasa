@@ -174,9 +174,35 @@
             const folderId = localStorage.getItem('folderId');
             const spreadsheetId = localStorage.getItem('spreadsheetId');
 
-            alert(`Dados enviados:\nID da Pasta: ${folderId}\nID da Planilha: ${spreadsheetId}\nNúmero do Dado: ${numeroDado}\nLink: ${link}\nCoordenadas: ${coordenadas}\nPadrão: ${padrao}\nConservação: ${conservacao}\nIdade Aparente: ${idadeAparente}`);
+            // Cria o objeto de dados para enviar ao webhook
+            const dadosParaEnviar = {
+                folderId: folderId,
+                spreadsheetId: spreadsheetId,
+                numeroDado: numeroDado,
+                link: link,
+                coordenadas: coordenadas,
+                padrao: padrao,
+                conservacao: conservacao,
+                idadeAparente: idadeAparente
+            };
 
-            // Adicione a lógica para enviar os dados via webhook ou outro método
+            // Envia os dados para o webhook
+            fetch('https://n8n.serranarealty.com.br/webhook-test/addcasa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dadosParaEnviar)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Sucesso:', data);
+                alert('Dados enviados com sucesso!');
+            })
+            .catch((error) => {
+                console.error('Erro:', error);
+                alert('Erro ao enviar os dados. Por favor, tente novamente.');
+            });
         });
 
         function initMap() {
