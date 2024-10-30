@@ -14,7 +14,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
         }
         .container {
             background-color: #fff;
@@ -86,6 +86,9 @@
             min-width: 300px;
             margin-right: 20px;
         }
+        #search-container {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -144,7 +147,13 @@
                         <button type="submit">Enviar Dados</button>
                     </form>
                 </div>
-                <div id="map"></div>
+                <div id="map-container">
+                    <div id="search-container">
+                        <input id="search-input" type="text" placeholder="Pesquisar endereço">
+                        <button onclick="searchLocation()">Buscar</button>
+                    </div>
+                    <div id="map"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -160,6 +169,7 @@
 
                 document.getElementById('page1').classList.remove('active');
                 document.getElementById('page2').classList.add('active');
+                initMap(); // Inicializa o mapa quando a página 2 é exibida
             } else {
                 alert('Por favor, preencha todos os campos.');
             }
@@ -182,67 +192,36 @@
             // Adicione a lógica para enviar os dados via webhook ou outro método
         });
 
+        let map;
+        let geocoder;
+
         function initMap() {
-            const map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: -23.55052, lng: -46.633308 }, // Inicializa o mapa em São Paulo
-                zoom: 10,
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: -25.394552444520578, lng: -51.4582512931166 },
+                zoom: 8,
             });
 
-            const input = document.createElement("input");
-            input.type = "text";
-            input.placeholder = "Pesquisar cidade";
-            input.style.width = "100%";
-            input.style.marginBottom = "10px";
-            document.getElementById("map").appendChild(input);
-
-            const searchBox = new google.maps.places.SearchBox(input);
-            map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-
-            map.addListener("bounds_changed", () => {
-                searchBox.setBounds(map.getBounds());
-            });
-
-            let markers = [];
-
-            searchBox.addListener("places_changed", () => {
-                const places = searchBox.getPlaces();
-
-                if (places.length == 0) {
-                    return;
-                }
-
-                markers.forEach((marker) => {
-                    marker.setMap(null);
-                });
-                markers = [];
-
-                const bounds = new google.maps.LatLngBounds();
-                places.forEach((place) => {
-                    if (!place.geometry || !place.geometry.location) {
-                        console.log("Returned place contains no geometry");
-                        return;
-                    }
-
-                    const marker = new google.maps.Marker({
-                        map,
-                        title: place.name,
-                        position: place.geometry.location,
-                    });
-
-                    markers.push(marker);
-
-                    if (place.geometry.viewport) {
-                        bounds.union(place.geometry.viewport);
-                    } else {
-                        bounds.extend(place.geometry.location);
-                    }
-                });
-                map.fitBounds(bounds);
-            });
+            geocoder = new google.maps.Geocoder();
 
             map.addListener("click", (mapsMouseEvent) => {
                 const coords = mapsMouseEvent.latLng.toString().replace(/[()]/g, '');
                 document.getElementById('coordenadas').value = coords;
+            });
+        }
+
+        function searchLocation() {
+            const address = document.getElementById('search-input').value;
+            geocoder.geocode({ 'address': address }, function(results, status) {
+                if (status === 'OK') {
+                    map.setCenter(results[0].geometry.location);
+                    new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location
+                    });
+                    document.getElementById('coordenadas').value = results[0].geometry.location.toString().replace(/[()]/g, '');
+                } else {
+                    alert('Geocode não foi bem-sucedido pelo seguinte motivo: ' + status);
+                }
             });
         }
     </script>
