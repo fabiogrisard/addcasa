@@ -85,6 +85,22 @@
         #pac-input:focus {
             border-color: #4d90fe;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f9;
+        }
+        input[type="radio"] {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -115,12 +131,107 @@
                 <label for="coordenadas">Coordenadas:</label>
                 <input type="text" id="coordenadas" name="coordenadas" required>
 
-                <label for="padrao">Padrão:</label>
-                <select id="padrao" name="padrao" required>
-                    <option value="alto">Alto</option>
-                    <option value="medio">Médio</option>
-                    <option value="baixo">Baixo</option>
-                </select>
+                <label>Padrão Construtivo:</label>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>Opção</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Residenciais - Baixo -->
+                        <tr>
+                            <td rowspan="4">Residenciais - Baixo</td>
+                            <td><input type="radio" name="padrao" value="R-1 2.229,62">R-1</td>
+                            <td>2.229,62</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="PP-4 2.060,13">PP-4</td>
+                            <td>2.060,13</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="R-8 1.958,05">R-8</td>
+                            <td>1.958,05</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="PIS 1.547,28">PIS</td>
+                            <td>1.547,28</td>
+                        </tr>
+                        <!-- Residenciais - Normal -->
+                        <tr>
+                            <td rowspan="4">Residenciais - Normal</td>
+                            <td><input type="radio" name="padrao" value="R-1 2.761,97">R-1</td>
+                            <td>2.761,97</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="PP-4 2.596,87">PP-4</td>
+                            <td>2.596,87</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="R-8 2.259,23">R-8</td>
+                            <td>2.259,23</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="R-16 2.191,32">R-16</td>
+                            <td>2.191,32</td>
+                        </tr>
+                        <!-- Residenciais - Alto -->
+                        <tr>
+                            <td rowspan="3">Residenciais - Alto</td>
+                            <td><input type="radio" name="padrao" value="R-1 3.396,94">R-1</td>
+                            <td>3.396,94</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="R-8 2.770,43">R-8</td>
+                            <td>2.770,43</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="R-16 2.796,00">R-16</td>
+                            <td>2.796,00</td>
+                        </tr>
+                        <!-- Comerciais - Normal -->
+                        <tr>
+                            <td rowspan="3">Comerciais - Normal</td>
+                            <td><input type="radio" name="padrao" value="CAL-8 2.552,51">CAL-8</td>
+                            <td>2.552,51</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="CSL-8 2.207,29">CSL-8</td>
+                            <td>2.207,29</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="CSL-16 2.949,18">CSL-16</td>
+                            <td>2.949,18</td>
+                        </tr>
+                        <!-- Comerciais - Alto -->
+                        <tr>
+                            <td rowspan="3">Comerciais - Alto</td>
+                            <td><input type="radio" name="padrao" value="CAL-8 2.755,48">CAL-8</td>
+                            <td>2.755,48</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="CSL-8 2.471,90">CSL-8</td>
+                            <td>2.471,90</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="padrao" value="CSL-16 3.298,37">CSL-16</td>
+                            <td>3.298,37</td>
+                        </tr>
+                        <!-- Galpão Industrial e Residência Popular -->
+                        <tr>
+                            <td>Galpão Industrial</td>
+                            <td><input type="radio" name="padrao" value="GI 1.227,89">GI</td>
+                            <td>1.227,89</td>
+                        </tr>
+                        <tr>
+                            <td>Residência Popular</td>
+                            <td><input type="radio" name="padrao" value="RP1Q 2.364,47">RP1Q</td>
+                            <td>2.364,47</td>
+                        </tr>
+                    </tbody>
+                </table>
 
                 <label for="conservacao">Conservação:</label>
                 <select id="conservacao" name="conservacao" required>
@@ -167,7 +278,7 @@
             const numeroDado = document.getElementById('numeroDado').value;
             const link = document.getElementById('link').value;
             const coordenadas = document.getElementById('coordenadas').value;
-            const padrao = document.getElementById('padrao').value;
+            const padrao = document.querySelector('input[name="padrao"]:checked').value;
             const conservacao = document.getElementById('conservacao').value;
             const idadeAparente = document.getElementById('idadeAparente').value;
 
@@ -185,7 +296,7 @@
                 idadeAparente: idadeAparente
             };
 
-            fetch('https://n8n.serranarealty.com.br/webhook/addcasa1', {
+            fetch('https://n8n.serranarealty.com.br/webhook-test/addcasa', {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: {
