@@ -549,104 +549,9 @@
                 document.getElementById('page1').classList.remove('active');
                 document.getElementById('page2').classList.add('active');
                 initMap();
-
-                // Rastreamento automático: ler planilha e pré-preencher
-                fetchLastEntry(spreadsheetId);
             } else {
                 alert('Por favor, preencha todos os campos.');
             }
-        }
-
-        // Rastreamento automático: buscar último dado inserido na planilha
-        function fetchLastEntry(spreadsheetId) {
-            const numeroInput = document.getElementById('numeroDado');
-            numeroInput.value = 'Carregando...';
-            numeroInput.disabled = true;
-
-            // Tentar ler via Google Sheets gviz API (funciona para planilhas públicas)
-            const gvizUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=imoveis`;
-
-            fetch(gvizUrl)
-                .then(response => response.text())
-                .then(csv => {
-                    const linhas = csv.split('\n').filter(l => l.trim() !== '');
-                    if (linhas.length <= 1) {
-                        // Sem dados ou apenas cabeçalho
-                        numeroInput.value = '1';
-                        numeroInput.disabled = false;
-                        document.getElementById('lastEntryInfo').style.display = 'block';
-                        document.getElementById('lastEntryText').textContent = 'Nenhum dado inserido ainda. Começando do número 1.';
-                        return;
-                    }
-
-                    // Pegar a última linha de dados (ignorando cabeçalho)
-                    const ultimaLinha = linhas[linhas.length - 1];
-                    const colunas = parseCSVLine(ultimaLinha);
-
-                    // Assumindo que a primeira coluna é o número do dado
-                    const ultimoNumero = parseInt(colunas[0]) || 0;
-                    const proximoNumero = ultimoNumero + 1;
-
-                    numeroInput.value = proximoNumero.toString();
-                    numeroInput.disabled = false;
-
-                    // Mostrar último dado inserido
-                    document.getElementById('lastEntryInfo').style.display = 'block';
-                    const lastInfo = `Número: ${colunas[0] || 'N/A'} | Link: ${colunas[1] || 'N/A'} | Coordenadas: ${colunas[3] || 'N/A'}`;
-                    document.getElementById('lastEntryText').textContent = lastInfo;
-                })
-                .catch(error => {
-                    console.error('Erro ao buscar último dado:', error);
-                    // Fallback: tentar sem nome de aba
-                    fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv`)
-                        .then(response => response.text())
-                        .then(csv => {
-                            const linhas = csv.split('\n').filter(l => l.trim() !== '');
-                            if (linhas.length <= 1) {
-                                numeroInput.value = '1';
-                                numeroInput.disabled = false;
-                                document.getElementById('lastEntryInfo').style.display = 'block';
-                                document.getElementById('lastEntryText').textContent = 'Nenhum dado inserido ainda. Começando do número 1.';
-                                return;
-                            }
-                            const ultimaLinha = linhas[linhas.length - 1];
-                            const colunas = parseCSVLine(ultimaLinha);
-                            const ultimoNumero = parseInt(colunas[0]) || 0;
-                            const proximoNumero = ultimoNumero + 1;
-                            numeroInput.value = proximoNumero.toString();
-                            numeroInput.disabled = false;
-                            document.getElementById('lastEntryInfo').style.display = 'block';
-                            const lastInfo = `Número: ${colunas[0] || 'N/A'} | Link: ${colunas[1] || 'N/A'} | Coordenadas: ${colunas[3] || 'N/A'}`;
-                            document.getElementById('lastEntryText').textContent = lastInfo;
-                        })
-                        .catch(err2 => {
-                            console.error('Erro no fallback:', err2);
-                            numeroInput.value = '';
-                            numeroInput.disabled = false;
-                            document.getElementById('lastEntryInfo').style.display = 'block';
-                            document.getElementById('lastEntryText').textContent = 'Não foi possível ler a planilha. Preencha manualmente.';
-                        });
-                });
-        }
-
-        // Parser simples para linha CSV (lida com vírgulas dentro de aspas)
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            result.push(current.trim());
-            return result;
         }
 
         // Função para sincronizar o número do dado via webhook
@@ -666,7 +571,7 @@
             feedback.textContent = 'Sincronizando número com a planilha...';
             feedback.className = 'feedback info';
 
-            fetch('https://bleatingfrilledlizard-n8n.cloudfy.live/webhook/numerodado', {
+            fetch('https://bleatingfrilledlizard-n8n.cloudfy.live/webhook-test/numerodado', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -813,9 +718,6 @@
                 submitFeedback.className = 'feedback success';
 
                 alert(mensagens.join('\n'));
-
-                // Atualizar rastreamento
-                fetchLastEntry(spreadsheetId);
             })
             .catch((error) => {
                 console.error('Erro:', error);
