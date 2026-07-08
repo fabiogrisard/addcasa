@@ -59,6 +59,10 @@
         button:hover {
             background-color: #0056b3;
         }
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
         img {
             display: block;
             width: 150px;
@@ -117,12 +121,145 @@
         .paste-button:hover {
             background-color: #c0c0c0;
         }
+        .field-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .field-row input[type="text"], .field-row input[type="url"] {
+            margin-top: 0;
+        }
+        .btn-small {
+            margin-top: 0;
+            padding: 10px 15px;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        .feedback {
+            margin-top: 5px;
+            font-size: 14px;
+            min-height: 20px;
+            padding: 5px 0;
+        }
+        .feedback.success { color: #28a745; }
+        .feedback.error { color: #dc3545; }
+        .feedback.warning { color: #ffc107; }
+        .feedback.info { color: #555; }
+        #numeroDado {
+            width: 200px;
+            flex-shrink: 0;
+        }
+        .last-entry-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .last-entry-info strong {
+            color: #2e7d32;
+        }
+        /* Captura de imagem */
+        .image-capture-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .image-capture-section h3 {
+            color: #007BFF;
+            margin-top: 0;
+        }
+        .capture-method {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background-color: #fff;
+        }
+        .capture-method h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+        .capture-method p {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .drop-zone {
+            border: 2px dashed #007BFF;
+            border-radius: 6px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            background-color: #e6f0ff;
+        }
+        .drop-zone p {
+            margin: 0;
+            color: #007BFF;
+            font-weight: bold;
+        }
+        #cropCanvas {
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            max-width: 100%;
+            cursor: crosshair;
+        }
+        #imagePreview {
+            max-width: 100%;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .crop-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .crop-overlay.active {
+            display: flex;
+        }
+        .crop-overlay canvas {
+            max-width: 90%;
+            max-height: 80%;
+            cursor: crosshair;
+            border: 2px solid #fff;
+        }
+        .crop-overlay .crop-buttons {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <img src="https://raw.githubusercontent.com/fabiogrisard/addcasa/refs/heads/main/logoexatanovo.JPG" alt="Logotipo">
-        
+
         <!-- Página 1: Configuração Inicial -->
         <div id="page1" class="page active">
             <h1>Configuração Inicial</h1>
@@ -146,8 +283,16 @@
         <div id="page2" class="page">
             <h1>Inserção de Dados Adicionais</h1>
             <form id="dataForm">
+                <div id="lastEntryInfo" class="last-entry-info" style="display:none;">
+                    <strong>Último dado inserido:</strong> <span id="lastEntryText"></span>
+                </div>
+
                 <label for="numeroDado">Número do Dado:</label>
-                <input type="text" id="numeroDado" name="numeroDado" required>
+                <div class="field-row">
+                    <input type="text" id="numeroDado" name="numeroDado" required>
+                    <button type="button" onclick="sincronizarNumero()" id="btnSincronizar" class="btn-small">Sincronizar</button>
+                </div>
+                <div id="syncFeedback" class="feedback"></div>
 
                 <label for="link">Link:</label>
                 <div style="display: flex; align-items: center;">
@@ -282,7 +427,47 @@
                 <label for="idadeAparente">Idade Aparente:</label>
                 <input type="number" id="idadeAparente" name="idadeAparente" required>
 
+                <!-- Seção de Captura de Imagem: os 3 métodos -->
+                <div class="image-capture-section">
+                    <h3>Captura de Imagem do Imóvel</h3>
+
+                    <!-- Método A: Print Screen + Recorte -->
+                    <div class="capture-method">
+                        <h4>Método A: Print Screen + Recorte (Ctrl+Shift+X)</h4>
+                        <p>Capture a tela e recorte a área desejada da imagem.</p>
+                        <button type="button" onclick="captureScreenForCrop()">Capturar Tela para Recorte</button>
+                        <span style="margin-left:10px; font-size:12px; color:#888;">Ou pressione Ctrl+Shift+X</span>
+                    </div>
+
+                    <!-- Método B: Upload Direto (Drag & Drop) -->
+                    <div class="capture-method">
+                        <h4>Método B: Upload Direto (Drag & Drop)</h4>
+                        <p>Arraste e solte uma imagem aqui ou clique para selecionar.</p>
+                        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                            <p>Arraste uma imagem aqui ou clique para selecionar</p>
+                        </div>
+                        <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+                    </div>
+
+                    <!-- Método C: Colar da Clipboard (Ctrl+V) -->
+                    <div class="capture-method">
+                        <h4>Método C: Colar da Clipboard (Ctrl+V)</h4>
+                        <p>Copie uma imagem (ex: Print Screen) e pressione Ctrl+V nesta página.</p>
+                        <button type="button" onclick="pasteImageFromClipboard()">Colar Imagem da Clipboard</button>
+                    </div>
+
+                    <!-- Preview da imagem capturada -->
+                    <div id="imagePreviewContainer" style="display:none; margin-top:15px;">
+                        <h4>Imagem Capturada:</h4>
+                        <img id="imagePreview" alt="Preview da imagem">
+                        <br>
+                        <button type="button" class="btn-small btn-danger" onclick="clearCapturedImage()">Remover Imagem</button>
+                    </div>
+                    <div id="imagemFeedback" class="feedback"></div>
+                </div>
+
                 <button type="submit">Enviar Dados</button>
+                <div id="submitFeedback" class="feedback"></div>
             </form>
 
             <!-- Mapa -->
@@ -291,7 +476,28 @@
         </div>
     </div>
 
+    <!-- Overlay para recorte de imagem -->
+    <div id="cropOverlay" class="crop-overlay">
+        <h3 style="color:#fff;">Selecione a área para recortar</h3>
+        <canvas id="cropCanvas"></canvas>
+        <div class="crop-buttons">
+            <button type="button" class="btn-success" onclick="confirmCrop()">Confirmar Recorte</button>
+            <button type="button" class="btn-danger" onclick="cancelCrop()">Cancelar</button>
+        </div>
+    </div>
+
     <script>
+        let capturedImageBase64 = null;
+        let capturedImageNome = null;
+        let cropStartX = 0;
+        let cropStartY = 0;
+        let cropEndX = 0;
+        let cropEndY = 0;
+        let isCropping = false;
+        let cropCtx = null;
+        let cropCanvasElem = null;
+        let fullScreenImage = null;
+
         // Função para buscar dados da planilha e preencher o dropdown
         function loadPlanilhas() {
             const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRuuja7Tveui7EINl-hHXdHtK9JI8qLnx4bELPAtRQcstNNzN0PMt7_KfsSjuuubl40xLUWaGzyl1AY/pub?gid=0&single=true&output=csv';
@@ -343,9 +549,193 @@
                 document.getElementById('page1').classList.remove('active');
                 document.getElementById('page2').classList.add('active');
                 initMap();
+
+                // Rastreamento automático: ler planilha e pré-preencher
+                fetchLastEntry(spreadsheetId);
             } else {
                 alert('Por favor, preencha todos os campos.');
             }
+        }
+
+        // Rastreamento automático: buscar último dado inserido na planilha
+        function fetchLastEntry(spreadsheetId) {
+            const numeroInput = document.getElementById('numeroDado');
+            numeroInput.value = 'Carregando...';
+            numeroInput.disabled = true;
+
+            // Tentar ler via Google Sheets gviz API (funciona para planilhas públicas)
+            const gvizUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=imoveis`;
+
+            fetch(gvizUrl)
+                .then(response => response.text())
+                .then(csv => {
+                    const linhas = csv.split('\n').filter(l => l.trim() !== '');
+                    if (linhas.length <= 1) {
+                        // Sem dados ou apenas cabeçalho
+                        numeroInput.value = '1';
+                        numeroInput.disabled = false;
+                        document.getElementById('lastEntryInfo').style.display = 'block';
+                        document.getElementById('lastEntryText').textContent = 'Nenhum dado inserido ainda. Começando do número 1.';
+                        return;
+                    }
+
+                    // Pegar a última linha de dados (ignorando cabeçalho)
+                    const ultimaLinha = linhas[linhas.length - 1];
+                    const colunas = parseCSVLine(ultimaLinha);
+
+                    // Assumindo que a primeira coluna é o número do dado
+                    const ultimoNumero = parseInt(colunas[0]) || 0;
+                    const proximoNumero = ultimoNumero + 1;
+
+                    numeroInput.value = proximoNumero.toString();
+                    numeroInput.disabled = false;
+
+                    // Mostrar último dado inserido
+                    document.getElementById('lastEntryInfo').style.display = 'block';
+                    const lastInfo = `Número: ${colunas[0] || 'N/A'} | Link: ${colunas[1] || 'N/A'} | Coordenadas: ${colunas[3] || 'N/A'}`;
+                    document.getElementById('lastEntryText').textContent = lastInfo;
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar último dado:', error);
+                    // Fallback: tentar sem nome de aba
+                    fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv`)
+                        .then(response => response.text())
+                        .then(csv => {
+                            const linhas = csv.split('\n').filter(l => l.trim() !== '');
+                            if (linhas.length <= 1) {
+                                numeroInput.value = '1';
+                                numeroInput.disabled = false;
+                                document.getElementById('lastEntryInfo').style.display = 'block';
+                                document.getElementById('lastEntryText').textContent = 'Nenhum dado inserido ainda. Começando do número 1.';
+                                return;
+                            }
+                            const ultimaLinha = linhas[linhas.length - 1];
+                            const colunas = parseCSVLine(ultimaLinha);
+                            const ultimoNumero = parseInt(colunas[0]) || 0;
+                            const proximoNumero = ultimoNumero + 1;
+                            numeroInput.value = proximoNumero.toString();
+                            numeroInput.disabled = false;
+                            document.getElementById('lastEntryInfo').style.display = 'block';
+                            const lastInfo = `Número: ${colunas[0] || 'N/A'} | Link: ${colunas[1] || 'N/A'} | Coordenadas: ${colunas[3] || 'N/A'}`;
+                            document.getElementById('lastEntryText').textContent = lastInfo;
+                        })
+                        .catch(err2 => {
+                            console.error('Erro no fallback:', err2);
+                            numeroInput.value = '';
+                            numeroInput.disabled = false;
+                            document.getElementById('lastEntryInfo').style.display = 'block';
+                            document.getElementById('lastEntryText').textContent = 'Não foi possível ler a planilha. Preencha manualmente.';
+                        });
+                });
+        }
+
+        // Parser simples para linha CSV (lida com vírgulas dentro de aspas)
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        // Função para sincronizar o número do dado via webhook
+        function sincronizarNumero() {
+            const spreadsheetId = document.getElementById('spreadsheetId').value || localStorage.getItem('spreadsheetId');
+            const feedback = document.getElementById('syncFeedback');
+            const btn = document.getElementById('btnSincronizar');
+
+            if (!spreadsheetId) {
+                feedback.textContent = 'Erro: ID da planilha não encontrado. Volte à página 1 e selecione uma planilha.';
+                feedback.className = 'feedback error';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Sincronizando...';
+            feedback.textContent = 'Sincronizando número com a planilha...';
+            feedback.className = 'feedback info';
+
+            fetch('https://bleatingfrilledlizard-n8n.cloudfy.live/webhook-test/numerodado', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ spreadsheetId: spreadsheetId })
+            })
+            .then(response => {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                }
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        return { numero: text.trim() };
+                    }
+                });
+            })
+            .then(data => {
+                let numero = null;
+
+                if (typeof data === 'number') {
+                    numero = data;
+                } else if (typeof data === 'string') {
+                    numero = data.trim();
+                } else if (Array.isArray(data) && data.length > 0) {
+                    const item = data[0];
+                    if (typeof item === 'object' && item !== null) {
+                        numero = item.numero || item.numeroDado || item.number || item.value || item.numerodado || extractNumberFromObject(item);
+                    } else if (typeof item === 'number') {
+                        numero = item;
+                    }
+                } else if (typeof data === 'object' && data !== null) {
+                    numero = data.numero || data.numeroDado || data.number || data.value || data.numerodado || extractNumberFromObject(data);
+                }
+
+                if (numero !== null && numero !== undefined && numero !== '') {
+                    document.getElementById('numeroDado').value = numero;
+                    feedback.textContent = '✓ Número sincronizado com sucesso: ' + numero;
+                    feedback.className = 'feedback success';
+                } else {
+                    feedback.textContent = '⚠ Resposta recebida, mas não foi possível extrair o número. Verifique o formato da resposta do webhook.';
+                    feedback.className = 'feedback warning';
+                    console.log('Resposta do webhook:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao sincronizar:', error);
+                feedback.textContent = '✗ Erro ao sincronizar número. Verifique sua conexão e se o webhook está ativo.';
+                feedback.className = 'feedback error';
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = 'Sincronizar';
+            });
+        }
+
+        // Função auxiliar para extrair número de um objeto
+        function extractNumberFromObject(obj) {
+            for (const key in obj) {
+                if (typeof obj[key] === 'number') {
+                    return obj[key];
+                }
+                if (typeof obj[key] === 'string' && !isNaN(parseInt(obj[key], 10))) {
+                    return obj[key];
+                }
+            }
+            return null;
         }
 
         // Função para enviar os dados do formulário
@@ -380,6 +770,17 @@
                 idadeAparente: idadeAparente
             };
 
+            // Adicionar imagem se houver, com nome baseado no número do dado
+            if (capturedImageBase64) {
+                atualizarNomeImagem();
+                dadosParaEnviar.imagemBase64 = capturedImageBase64;
+                dadosParaEnviar.imagemNome = capturedImageNome;
+            }
+
+            const submitFeedback = document.getElementById('submitFeedback');
+            submitFeedback.textContent = 'Enviando dados...';
+            submitFeedback.className = 'feedback info';
+
             fetch('https://bleatingfrilledlizard-n8n.cloudfy.live/webhook/addcasa1', {
                 method: 'POST',
                 mode: 'no-cors',
@@ -390,10 +791,36 @@
             })
             .then(response => {
                 console.log('Resposta recebida');
-                alert('Dados enviados com sucesso!');
+
+                let mensagens = ['✓ Dados enviados com sucesso!'];
+
+                if (capturedImageBase64) {
+                    mensagens.push('✓ Imagem enviada: ' + capturedImageNome);
+                }
+
+                // Incremento automático do número
+                const numeroAtual = parseInt(numeroDado, 10);
+                if (!isNaN(numeroAtual)) {
+                    const proximoNumero = numeroAtual + 1;
+                    document.getElementById('numeroDado').value = proximoNumero;
+                    mensagens.push('✓ Próximo número preenchido automaticamente: ' + proximoNumero);
+                }
+
+                // Limpar imagem após envio
+                clearCapturedImage();
+
+                submitFeedback.innerHTML = mensagens.join('<br>');
+                submitFeedback.className = 'feedback success';
+
+                alert(mensagens.join('\n'));
+
+                // Atualizar rastreamento
+                fetchLastEntry(spreadsheetId);
             })
             .catch((error) => {
                 console.error('Erro:', error);
+                submitFeedback.textContent = '✗ Erro ao enviar os dados. Por favor, tente novamente.';
+                submitFeedback.className = 'feedback error';
                 alert('Erro ao enviar os dados. Por favor, tente novamente.');
             });
         });
@@ -507,8 +934,311 @@
             }
         }
 
-        // Carrega as planilhas ao carregar a página
-        window.onload = loadPlanilhas;
+        // =============================================
+        // FUNCIONALIDADES DE CAPTURA DE IMAGEM (3 métodos)
+        // =============================================
+
+        // Nome do arquivo de imagem baseado no número do dado
+        function atualizarNomeImagem() {
+            const numeroDado = document.getElementById('numeroDado').value;
+            const numeroFormatado = String(numeroDado).padStart(3, '0');
+            const match = capturedImageBase64 ? capturedImageBase64.match(/data:image\/(\w+);/) : null;
+            const ext = match ? match[1] : 'png';
+            capturedImageNome = 'casa_' + numeroFormatado + '.' + ext;
+        }
+
+        // Método A: Capturar tela para recorte (Ctrl+Shift+X)
+        async function captureScreenForCrop() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.style.display = 'none';
+                document.body.appendChild(video);
+
+                video.onloadedmetadata = async () => {
+                    video.play();
+                    // Aguardar um frame
+                    await new Promise(resolve => setTimeout(resolve, 200));
+
+                    // Capturar frame para canvas
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0);
+
+                    // Parar o stream
+                    stream.getTracks().forEach(track => track.stop());
+                    document.body.removeChild(video);
+
+                    // Mostrar overlay de recorte
+                    showCropOverlay(canvas);
+                };
+            } catch (err) {
+                console.error('Erro ao capturar tela:', err);
+                const feedback = document.getElementById('imagemFeedback');
+                feedback.textContent = '✗ Erro ao capturar tela. Verifique as permissões do navegador.';
+                feedback.className = 'feedback error';
+            }
+        }
+
+        function showCropOverlay(sourceCanvas) {
+            const overlay = document.getElementById('cropOverlay');
+            cropCanvasElem = document.getElementById('cropCanvas');
+            cropCtx = cropCanvasElem.getContext('2d');
+
+            // Ajustar tamanho do canvas de recorte mantendo proporção
+            const maxWidth = window.innerWidth * 0.9;
+            const maxHeight = window.innerHeight * 0.8;
+            let scale = Math.min(maxWidth / sourceCanvas.width, maxHeight / sourceCanvas.height);
+            scale = Math.min(scale, 1);
+
+            cropCanvasElem.width = sourceCanvas.width * scale;
+            cropCanvasElem.height = sourceCanvas.height * scale;
+
+            cropCtx.drawImage(sourceCanvas, 0, 0, cropCanvasElem.width, cropCanvasElem.height);
+            fullScreenImage = sourceCanvas;
+
+            overlay.classList.add('active');
+        }
+
+        function setupCropCanvas() {
+            cropCanvasElem = document.getElementById('cropCanvas');
+            cropCtx = cropCanvasElem.getContext('2d');
+
+            cropCanvasElem.addEventListener('mousedown', function(e) {
+                const rect = cropCanvasElem.getBoundingClientRect();
+                cropStartX = e.clientX - rect.left;
+                cropStartY = e.clientY - rect.top;
+                isCropping = true;
+            });
+
+            cropCanvasElem.addEventListener('mousemove', function(e) {
+                if (!isCropping || !fullScreenImage) return;
+                const rect = cropCanvasElem.getBoundingClientRect();
+                cropEndX = e.clientX - rect.left;
+                cropEndY = e.clientY - rect.top;
+
+                // Redesenhar e mostrar seleção
+                cropCtx.clearRect(0, 0, cropCanvasElem.width, cropCanvasElem.height);
+                cropCtx.drawImage(fullScreenImage, 0, 0, cropCanvasElem.width, cropCanvasElem.height);
+
+                // Desenhar retângulo de seleção
+                const w = cropEndX - cropStartX;
+                const h = cropEndY - cropStartY;
+                cropCtx.strokeStyle = '#ff0000';
+                cropCtx.lineWidth = 2;
+                cropCtx.setLineDash([5, 5]);
+                cropCtx.strokeRect(cropStartX, cropStartY, w, h);
+                cropCtx.setLineDash([]);
+
+                // Escurecer área fora da seleção
+                cropCtx.fillStyle = 'rgba(0,0,0,0.4)';
+                cropCtx.fillRect(0, 0, cropCanvasElem.width, cropStartY);
+                cropCtx.fillRect(0, cropStartY, cropStartX, h);
+                cropCtx.fillRect(cropEndX, cropStartY, cropCanvasElem.width - cropEndX, h);
+                cropCtx.fillRect(0, cropEndY, cropCanvasElem.width, cropCanvasElem.height - cropEndY);
+            });
+
+            cropCanvasElem.addEventListener('mouseup', function(e) {
+                isCropping = false;
+            });
+        }
+
+        function confirmCrop() {
+            if (cropStartX === cropEndX || cropStartY === cropEndY) {
+                alert('Por favor, selecione uma área para recortar.');
+                return;
+            }
+
+            // Calcular coordenadas reais (sem escala)
+            const scaleX = fullScreenImage.width / cropCanvasElem.width;
+            const scaleY = fullScreenImage.height / cropCanvasElem.height;
+
+            const realX = Math.min(cropStartX, cropEndX) * scaleX;
+            const realY = Math.min(cropStartY, cropEndY) * scaleY;
+            const realW = Math.abs(cropEndX - cropStartX) * scaleX;
+            const realH = Math.abs(cropEndY - cropStartY) * scaleY;
+
+            // Criar canvas com a área recortada
+            const croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = realW;
+            croppedCanvas.height = realH;
+            const croppedCtx = croppedCanvas.getContext('2d');
+            croppedCtx.drawImage(fullScreenImage, realX, realY, realW, realH, 0, 0, realW, realH);
+
+            // Converter para base64
+            capturedImageBase64 = croppedCanvas.toDataURL('image/png');
+            atualizarNomeImagem();
+            showImagePreview(capturedImageBase64);
+
+            const feedback = document.getElementById('imagemFeedback');
+            feedback.textContent = '✓ Imagem recortada: ' + capturedImageNome;
+            feedback.className = 'feedback success';
+
+            cancelCrop();
+        }
+
+        function cancelCrop() {
+            document.getElementById('cropOverlay').classList.remove('active');
+            fullScreenImage = null;
+            cropStartX = 0;
+            cropStartY = 0;
+            cropEndX = 0;
+            cropEndY = 0;
+            isCropping = false;
+        }
+
+        // Método B: Upload Direto (Drag & Drop / Selecionar Arquivo)
+        function setupDropZone() {
+            const dropZone = document.getElementById('dropZone');
+
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                const feedback = document.getElementById('imagemFeedback');
+                feedback.textContent = '✗ Por favor, selecione um arquivo de imagem.';
+                feedback.className = 'feedback error';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                capturedImageBase64 = e.target.result;
+                atualizarNomeImagem();
+                showImagePreview(capturedImageBase64);
+
+                const feedback = document.getElementById('imagemFeedback');
+                feedback.textContent = '✓ Imagem carregada: ' + capturedImageNome;
+                feedback.className = 'feedback success';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Método C: Colar imagem da Clipboard (Ctrl+V)
+        function setupPasteListener() {
+            document.addEventListener('paste', function(e) {
+                // Só processar se estiver na página 2
+                if (!document.getElementById('page2').classList.contains('active')) {
+                    return;
+                }
+
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.startsWith('image/')) {
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            capturedImageBase64 = event.target.result;
+                            atualizarNomeImagem();
+                            showImagePreview(capturedImageBase64);
+
+                            const feedback = document.getElementById('imagemFeedback');
+                            feedback.textContent = '✓ Imagem colada: ' + capturedImageNome;
+                            feedback.className = 'feedback success';
+                        };
+                        reader.readAsDataURL(blob);
+                        e.preventDefault();
+                        break;
+                    }
+                }
+            });
+        }
+
+        async function pasteImageFromClipboard() {
+            const feedback = document.getElementById('imagemFeedback');
+            try {
+                const clipboardItems = await navigator.clipboard.read();
+                for (const item of clipboardItems) {
+                    for (const type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                capturedImageBase64 = e.target.result;
+                                atualizarNomeImagem();
+                                showImagePreview(capturedImageBase64);
+                                feedback.textContent = '✓ Imagem colada: ' + capturedImageNome;
+                                feedback.className = 'feedback success';
+                            };
+                            reader.readAsDataURL(blob);
+                            return;
+                        }
+                    }
+                }
+                feedback.textContent = '⚠ Nenhuma imagem encontrada na clipboard. Tire um Print Screen e tente novamente.';
+                feedback.className = 'feedback warning';
+            } catch (err) {
+                console.error('Erro ao colar imagem:', err);
+                feedback.textContent = '✗ Erro ao acessar a clipboard. Verifique as permissões do navegador.';
+                feedback.className = 'feedback error';
+            }
+        }
+
+        // Atalho Ctrl+Shift+X para captura de tela
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'X') {
+                e.preventDefault();
+                if (document.getElementById('page2').classList.contains('active')) {
+                    captureScreenForCrop();
+                }
+            }
+        });
+
+        // Mostrar preview da imagem capturada
+        function showImagePreview(base64) {
+            const container = document.getElementById('imagePreviewContainer');
+            const img = document.getElementById('imagePreview');
+            img.src = base64;
+            container.style.display = 'block';
+        }
+
+        // Limpar imagem capturada
+        function clearCapturedImage() {
+            capturedImageBase64 = null;
+            capturedImageNome = null;
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            document.getElementById('imagePreview').src = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('imagemFeedback').textContent = '';
+            document.getElementById('imagemFeedback').className = 'feedback';
+        }
+
+        // Carrega as planilhas e configura os listeners de imagem ao carregar a página
+        window.onload = function() {
+            loadPlanilhas();
+            setupDropZone();
+            setupPasteListener();
+            setupCropCanvas();
+        };
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAryf15DN6a0iOH72GMB0IaS3qbL44E8G8&libraries=places&callback=initMap" async defer></script>
 </body>
